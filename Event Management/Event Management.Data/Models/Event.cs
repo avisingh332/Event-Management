@@ -12,15 +12,17 @@ namespace Event_Management.Data.Models
         public Guid Id { get; set; }
         public string Name { get; set; }
 
+        public string Description { get; set; }
+
         public string Location { get; set; }
         public DateTime DateTime { get; set; }
         public DateTime CreatedAt { get; set; }
         [ForeignKey("Organizer")]
-        public Guid OrganizerId { get; set; }
+        public string OrganizerId { get; set; }
         
         //navigation Property
-        public ApplicationUser Organizer { get; set; }
-        public ICollection<ApplicationUser> Attendees { get; set; }
+        public virtual  ApplicationUser Organizer { get; set; }
+        public virtual  ICollection<EventAttendee> EventAttendees { get; set; }
 
     }
 }
