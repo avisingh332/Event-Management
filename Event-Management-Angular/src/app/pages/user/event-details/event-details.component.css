@@ -1,0 +1,30 @@
+.header-details{
+    /* box-shadow: rgba(0, 0, 0, 0.16) 0px 1px 4px; */
+    border-radius: 0.5em;
+    padding:20px;
+    border: 1px solid black;
+}
+.price-text{
+    font-weight: 700;
+    font-size: 19px;
+    line-height: 22px;
+}
+a{
+    text-decoration: none;
+}
+.bn-button{
+    width: 100%;
+    color: white;
+    font-weight: bold;
+    text-align: center;
+    font-size: 21px;
+    padding: 8px 18px;
+    max-height: 42px;
+    text-transform: uppercase;
+    white-space: nowrap;
+    border-radius: 6px;
+    cursor: pointer;
+    background-color: rgb(236, 16, 102);
+    font-stretch: condensed;
+    font-family: korolev-condensed, sans-serif;
+}

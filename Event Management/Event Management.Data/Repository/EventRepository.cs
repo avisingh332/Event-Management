@@ -1,10 +1,12 @@
 ﻿using Event_Management.Data.Models;
 using Event_Management.Data.Repository.IRepository;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Tracing;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -55,6 +57,36 @@ namespace Event_Management.Data.Repository
             _db.EventsAttendees.Remove(registrationRecord);
             return await _db.SaveChangesAsync() > 0;
 
+        }
+
+        public async Task<IEnumerable<Event>> GetUpcomingEventsForUserAsync( Expression<Func<Event,bool>>? filter = null )
+        {
+            var query = _db.Events.Include(e => e.EventAttendees)
+                .Where(filter);
+            return await query.ToListAsync();
+        }
+
+        public override async Task RemoveAsync(Event entity)
+        {
+            var eventAttendees = _db.EventsAttendees.Where(ea => ea.EventId == entity.Id).ToList();
+            if (eventAttendees != null)
+            {
+                _db.EventsAttendees.RemoveRange(eventAttendees);
+            }
+
+            _db.Events.Remove(entity);
+
+            await _db.SaveChangesAsync();
+        }
+
+        public async Task<IEnumerable<Event>> GetAllEventWithAttendeesAsync(Expression<Func<Event, bool>>? filter = null)
+        {
+            IQueryable<Event> query = _db.Events;
+            if (filter != null) query = query.Where(filter);
+            query = query.Include(e => e.EventAttendees).ThenInclude(ea => ea.Attendee);
+            query = query.Include(e => e.Organizer);
+            var ev = await query.ToListAsync();
+            return ev;
         }
     }
 }

@@ -1,0 +1,47 @@
+<div class="container mt-5">
+  <h1 *ngIf="!isEditing">Create Event</h1>
+  <h1 *ngIf="isEditing" >Update Event</h1>
+  <form [formGroup]="eventForm" (ngSubmit)="onSubmit()">
+    <div class="mb-3">
+      <label for="name" class="form-label">Event Name:</label>
+      <input id="name" formControlName="name" class="form-control" />
+      <div *ngIf="eventForm.get('name')?.invalid && eventForm.get('name')?.touched" class="text-danger">
+        <small>Name is required.</small>
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <label for="description" class="form-label">Description:</label>
+      <textarea id="description" formControlName="description" class="form-control"></textarea>
+      <div *ngIf="eventForm.get('description')?.invalid && eventForm.get('description')?.touched" class="text-danger">
+        <small>Description is required.</small>
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <label for="location" class="form-label">Location:</label>
+      <input id="location" formControlName="location" class="form-control" />
+      <div *ngIf="eventForm.get('location')?.invalid && eventForm.get('location')?.touched" class="text-danger">
+        <small>Location is required.</small>
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <label for="imageUrl" class="form-label">Image Url:</label>
+      <input id="imageUrl" formControlName="imageUrl" class="form-control" />
+      <div *ngIf="eventForm.get('imageUrl')?.invalid && eventForm.get('imageUrl')?.touched" class="text-danger">
+        <small>Image Url is required.</small>
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <label for="dateTime" class="form-label">Date & Time:</label>
+      <input type="datetime-local" id="dateTime" formControlName="dateTime" class="form-control" [min]="minDateTime" />
+      <div *ngIf="eventForm.get('dateTime')?.invalid && eventForm.get('dateTime')?.touched" class="text-danger">
+        <small>Valid date and time is required.</small>
+      </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary" [disabled]="eventForm.invalid"> Submit</button>
+  </form>
+</div>

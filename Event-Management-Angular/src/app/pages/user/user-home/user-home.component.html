@@ -1,0 +1,26 @@
+<ng-container *ngIf="events.length>0; else loader" >
+    <div class="container">
+        <div class="row mt-1 g-4 align-items-strech">
+                <div class="col col-12 col-md-3 " *ngFor="let event of events; let i= index" >
+                    <div class="card h-100" [routerLink]="['/event-details', event.id]" style="width: 18rem;">
+                        <div><img src="{{event.imageUrl}}" alt="...." class="card-img-top" ></div>
+                        <!----------------- Card- Body --------------->
+                        <div class="card-body">
+                            <h5 class="card-title">{{event.name}}</h5>
+                            <p class="card-text"> <i class="fa-solid fa-location-dot me-2"></i> {{event.location}} </p>
+                            <p class="card-text">{{event.description}}</p>
+                        </div>
+                    </div>
+                </div>
+            
+        </div>
+    </div>
+
+</ng-container>
+<ng-template #loader>
+    <div class="text-center mt-5">
+        <div class="spinner-border" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+</ng-template>

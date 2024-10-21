@@ -19,6 +19,8 @@ namespace Event_Management.Data.Models
         public DateTime CreatedAt { get; set; }
         [ForeignKey("Organizer")]
         public string OrganizerId { get; set; }
+
+        public string ImageUrl { get; set; }
         
         //navigation Property
         public virtual  ApplicationUser Organizer { get; set; }

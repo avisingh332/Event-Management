@@ -23,10 +23,18 @@ namespace Event_Management.Controllers
         {
             _eventService = eventService;
         }
-
+        [HttpGet]
+        [Route("{id}")]
+        public async Task<ActionResult<EventResponseDto>> GetEventById([FromRoute] Guid id)
+        {
+            string userId = User.GetUserId();
+            var response = await _eventService.GetEventByIdAsync(id, userId);
+            return Ok(response);
+        }
+        
         [HttpPost]
         [Authorize(Roles = "Organizer")]
-        public async Task<ActionResult<EventResponseDto>> CreateEvent([FromBody] EventRequestDto req)
+        public async Task<ActionResult<EventResponseDto>> CreateEventAsync([FromBody] EventRequestDto req)
         {
             if (!ModelState.IsValid)
             {
@@ -39,14 +47,23 @@ namespace Event_Management.Controllers
         }
 
         [HttpGet]
-        [Authorize(Roles = "Organizer,Attendee")]
-        public async Task<ActionResult<IEnumerable<EventResponseDto>>> GetAllEvents()
+        [Authorize(Roles = "Organizer")]
+        [Route("Organizer")]
+        public async Task<ActionResult<IEnumerable<EventResponseDto>>> GetAllEventsForOrganizer()
         {
-            var user = User.GetUserId();
-            var role = User.GetRole();
-            if (string.IsNullOrEmpty(role) || string.IsNullOrEmpty(user)) return ValidationProblem("Unauthorized User");
-            var response = await _eventService.GetAllEventsAsync(user, role);
-            return Ok(response);
+            var userId = User.GetUserId();
+            //var role = User.GetRole();
+            if (string.IsNullOrEmpty(userId)) return ValidationProblem("Unauthorized User");
+            return Ok(await _eventService.GetEventsForOrganizerAsync(userId));
+            
+        }
+        [HttpGet]
+        [Route("Attendee")]
+        public async Task<ActionResult<IEnumerable<EventResponseForUserDto>>> GetAllEventsForAttendee()
+        {
+            var userId = User.GetUserId();
+            //if ( string.IsNullOrEmpty(userId)) return ValidationProblem("Unauthorized User");
+           return Ok(await _eventService.GetUpcomingEventsForAttendeeAsync(userId));
         }
 
         [HttpGet]
@@ -71,11 +88,17 @@ namespace Event_Management.Controllers
             bool isCompleted = await _eventService.RegisterUserAsync(eventId, userId);
             if (isCompleted)
             {
-                return Ok("User Has Successfully Registered For Event");
+                return Ok(new
+                {
+                    Message = "User Has Successfully Registered For Event",
+                });
             }
             else
             {
-                return BadRequest("Failed to Register for Event");
+                return BadRequest(new
+                {
+                    Message  = "Failed to Register for Event"
+                });
             }
         }
 
@@ -90,11 +113,17 @@ namespace Event_Management.Controllers
             var isSuccess = await _eventService.RemoveRegistrationAsync(eventId, userId);
             if (isSuccess)
             {
-                return Ok("Successfully Removed Registration");
+                return Ok(new
+                {
+                    Message="Successfully Removed Registration",
+                });
             }
             else
             {
-                return BadRequest("Failed to Remove Registration.");
+                return BadRequest(new
+                {
+                    Message = "Failed to Remove Registration."
+                });
             }
         }
 
@@ -104,6 +133,7 @@ namespace Event_Management.Controllers
         public async Task<ActionResult<EventResponseDto>> CancelEventAsync([FromRoute] Guid id)
         {
             var response = await _eventService.CancelEventAsync(id);
+
             return Ok(response);
         }
 
@@ -116,5 +146,6 @@ namespace Event_Management.Controllers
             var response = await _eventService.UpdateEventAsync(id, req);
             return Ok(response);
         }
+        
     }
 }

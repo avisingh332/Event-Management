@@ -1,0 +1,48 @@
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <!-- container wrapper -->
+    <div class="container-fluid">
+        <a class="navbar-brand"
+            [routerLink]="user!=undefined && user.roles.includes('Organizer')?['organizer','home']:['user','home']">Event Management</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        
+        <!-- align the following div to the right  -->
+        <div class="collapse navbar-collapse " id="navbarSupportedContent">
+
+            <ng-container *ngIf="user!=undefined;else login">
+                <div class="d-flex flex-row align-items-center ms-auto me-2">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
+                                data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fa-solid fa-circle-user fa-lg"></i>
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                                <li *ngIf="user!=undefined && user.roles.includes('Organizer')" ><a class="dropdown-item" [routerLink]="['/organizer', 'add-event']"  >Add Event</a></li>
+                                <li *ngIf="user!=undefined && user.roles.includes('Attendee')" ><a class="dropdown-item"[routerLink]="['/user', 'my-bookings']">Bookings</a></li>
+                                <!-- <li><a class="dropdown-item" href="#">Purchased Items</a></li> -->
+                                <li>
+                                    <hr class="dropdown-divider">
+                                </li>
+                                <li><button class="dropdown-item" (click)="logout()">Logout</button></li>
+                            </ul>
+                        </li>
+                        <!-- <li class="nav-item">
+                            <a class="nav-link" href="#">Link</a>
+                        </li> -->
+                    </ul>
+                    <h6 class="text-white">Hello {{user.name}}!!!!</h6>
+                </div>
+            </ng-container>
+            <ng-template #login>
+                <div class="ms-auto me-2">
+                    <a class="btn btn-outline-light" routerLink="/login">Login</a>
+                </div>
+            </ng-template>
+
+        </div>
+
+    </div>
+</nav>

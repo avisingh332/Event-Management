@@ -22,9 +22,10 @@ namespace Event_Management.Business.Dtos.ResponseDto
         [Required] public DateTime CreatedAt { get; set; }
 
         public string OrganizerId { get; set; }
+        public string ImageUrl { get; set; }
 
         //navigation Property
-        public ApplicationUser? Organizer { get; set; }
-        public ICollection<EventAttendee>? EventAttendees { get; set; }
+        public AttendeeResponseDto? Organizer { get; set; }
+        public IEnumerable<AttendeeResponseDto>? Attendees { get; set; }
     }
 }

@@ -61,7 +61,7 @@ namespace Event_Management.Data.Repository
             return result;
         }
 
-        public async Task RemoveAsync(T entity)
+        public virtual async Task RemoveAsync(T entity)
         {
             dbSet.Remove(entity);
             await _db.SaveChangesAsync();

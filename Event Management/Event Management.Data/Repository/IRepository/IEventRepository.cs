@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -12,5 +13,7 @@ namespace Event_Management.Data.Repository.IRepository
         Task<IEnumerable<Event>> GetMyRegistrationsAsync(string userId);
         Task<bool> RegisterUserAsync(Guid eventId, string userId);
         Task<bool> RemoveRegistrationAsync(Guid eventId, string userId);
+        Task<IEnumerable<Event>> GetUpcomingEventsForUserAsync( Expression<Func<Event, bool>>? filter = null);
+        Task<IEnumerable<Event>> GetAllEventWithAttendeesAsync(Expression<Func<Event, bool>>? filter = null);
     }
 }

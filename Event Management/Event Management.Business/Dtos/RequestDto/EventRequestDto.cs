@@ -21,5 +21,7 @@ namespace Event_Management.Business.Dtos.RequestDto
         [Required]
         public string Description { get; set; } 
 
+        public string ImageUrl { get; set; }
+
     }
 }

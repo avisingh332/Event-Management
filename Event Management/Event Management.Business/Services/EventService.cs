@@ -5,6 +5,7 @@ using Event_Management.Data.Models;
 using Event_Management.Data.Repository.IRepository;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -40,6 +41,7 @@ namespace Event_Management.Business.Services
                 DateTime = d.DateTime,
                 CreatedAt = DateTime.UtcNow,
                 OrganizerId = organizerId,
+                ImageUrl = d.ImageUrl,
             };
              await _eventRepository.AddAsync(e);
             var eventAdded = await _eventRepository.GetAsync(e => e.Id ==eventId);
@@ -57,19 +59,18 @@ namespace Event_Management.Business.Services
                 DateTime = eventAdded.DateTime,
                 CreatedAt = eventAdded.CreatedAt,
                 OrganizerId = eventAdded.OrganizerId
-
             };
             return response;
         }
 
-        public async Task<EventResponseDto> GetEventByIdAsync(Guid id)
+        public async Task<EventResponseForUserDto> GetEventByIdAsync(Guid id, string? userid=null)
         {
-            var e = await _eventRepository.GetAsync(e => e.Id == id);
+            var e = await _eventRepository.GetAsync(e => e.Id == id, includeProperties: "EventAttendees,Organizer");
             if (e == null)
             {
                 throw new KeyNotFoundException("No Record Found with this key");
             }
-            var response = new EventResponseDto
+            var response = new EventResponseForUserDto
             {
                 Id = e.Id,
                 Name = e.Name,
@@ -77,24 +78,26 @@ namespace Event_Management.Business.Services
                 Location = e.Location,
                 DateTime = e.DateTime,
                 CreatedAt = e.CreatedAt,
-                OrganizerId = e.OrganizerId
-
+                OrganizerId = e.OrganizerId,
+                ImageUrl = e.ImageUrl,
+                IsRegistered = e.EventAttendees.Any(ea => ea.AttendeeId ==userid),
             };
+            if (e.Organizer != null)
+            {
+
+                response.Organizer = new AttendeeResponseDto
+                {
+                    Id = e.OrganizerId,
+                    Name = e.Organizer.FullName,
+                    Email = e.Organizer.Email != null ? e.Organizer.Email : "",
+                };
+            }
             return response;
         }
 
-        public async Task<IEnumerable<EventResponseDto>> GetAllEventsAsync(string userId, string role)
+        public async Task<IEnumerable<EventResponseDto>> GetEventsForOrganizerAsync(string userId)
         {
-            IEnumerable<Event> events = new List<Event>();
-            switch (role)
-            {
-                case "Organizer":
-                    events = await _eventRepository.GetAllAsync(e => e.OrganizerId == userId, includeProperties:"Organizer");
-                    break;
-                case "Attendee":
-                    events = await _eventRepository.GetAllAsync(e => e.DateTime > DateTime.Now);
-                    break;
-            }
+            var events = await _eventRepository.GetAllEventWithAttendeesAsync(e => e.OrganizerId == userId);
             IEnumerable<EventResponseDto> response = new List<EventResponseDto>();
             if (events.Any())
             {
@@ -108,13 +111,67 @@ namespace Event_Management.Business.Services
                         Location = e.Location,
                         DateTime = e.DateTime,
                         CreatedAt = e.CreatedAt,
-                        OrganizerId = e.OrganizerId
+                        OrganizerId = e.OrganizerId, 
+                        ImageUrl = e.ImageUrl,
                     };
-                    if (e.Organizer!=null)
+                    if (e.Organizer != null)
                     {
-                        e.Organizer.OrganizedEvents = null;
-                        respObj.Organizer = e.Organizer;
+
+                        respObj.Organizer = new AttendeeResponseDto
+                        {
+                            Id = e.OrganizerId,
+                            Name = e.Organizer.FullName,
+                            Email = e.Organizer.Email!=null? e.Organizer.Email: "",
+                        };
                     }
+                    if ( e.EventAttendees!=null && e.EventAttendees.Any())
+                    {
+                        respObj.Attendees = e.EventAttendees.Select<EventAttendee, AttendeeResponseDto>(ea =>
+                        {
+                            return new AttendeeResponseDto
+                            {
+                                Id = ea.AttendeeId,
+                                Name = ea.Attendee.FullName,
+                                Email = e.Organizer.Email != null ? e.Organizer.Email : "",
+                            };
+                        });
+                    }
+                    return respObj;
+                });
+            }
+
+            return response;
+        }
+        public async Task<IEnumerable<EventResponseForUserDto>> GetUpcomingEventsForAttendeeAsync(string? userId = null)
+        {
+            var events = await _eventRepository.GetUpcomingEventsForUserAsync(e => e.DateTime > DateTime.Now);
+            IEnumerable<EventResponseForUserDto> response = new List<EventResponseForUserDto>();
+            if (events.Any())
+            {
+                response = events.Select(e =>
+                {
+                    var respObj = new EventResponseForUserDto
+                    {
+                        Id = e.Id,
+                        Name = e.Name,
+                        Description = e.Description,
+                        Location = e.Location,
+                        DateTime = e.DateTime,
+                        CreatedAt = e.CreatedAt,
+                        OrganizerId = e.OrganizerId,
+                        ImageUrl = e.ImageUrl,
+                        IsRegistered = e.EventAttendees.Any(ea => ea.AttendeeId == userId)
+                    };
+                    if (e.Organizer != null)
+                    {
+                        respObj.Organizer = new AttendeeResponseDto
+                        {
+                            Id = e.OrganizerId,
+                            Name = e.Organizer.FullName,
+                            Email = e.Organizer.Email != null ? e.Organizer.Email : "",
+                        };
+                    }
+
                     return respObj;
                 });
             }
@@ -130,7 +187,7 @@ namespace Event_Management.Business.Services
             {
                 response = myEvents.Select(e =>
                 {
-                    return new EventResponseDto
+                    var respObj = new EventResponseDto
                     {
                         Id = e.Id,
                         Name = e.Name,
@@ -138,9 +195,19 @@ namespace Event_Management.Business.Services
                         Location = e.Location,
                         DateTime = e.DateTime,
                         CreatedAt = e.CreatedAt,
-                        OrganizerId = e.OrganizerId,
-                        Organizer = e.Organizer
+                        OrganizerId = e.OrganizerId, 
+                        ImageUrl = e.ImageUrl,
                     };
+                    if (e.Organizer != null)
+                    {
+                        respObj.Organizer = new AttendeeResponseDto
+                        {
+                            Id = e.OrganizerId,
+                            Name = e.Organizer.FullName,
+                            Email = e.Organizer.Email != null ? e.Organizer.Email : "",
+                        };
+                    }
+                    return respObj;
                 }).ToList();
             }
             return response;
@@ -176,19 +243,29 @@ namespace Event_Management.Business.Services
                 DateTime = eventToRemove.DateTime,
                 CreatedAt = eventToRemove.CreatedAt,
                 OrganizerId = eventToRemove.OrganizerId,
-                Organizer = eventToRemove.Organizer
             };
+            if (eventToRemove.Organizer != null)
+            {
+
+                response.Organizer = new AttendeeResponseDto
+                {
+                    Id = eventToRemove.OrganizerId,
+                    Name = eventToRemove.Organizer.FullName,
+                    Email = eventToRemove.Organizer.Email != null ? eventToRemove.Organizer.Email : "",
+                };
+            }
             return response;
         }
 
         public async Task<EventResponseDto> UpdateEventAsync(Guid eventId, EventRequestDto e)
         {
-            var eventToUpdate = await _eventRepository.GetAsync(e => e.Equals(eventId)) ?? throw new KeyNotFoundException("Event Doesn't Exist");
+            var eventToUpdate = await _eventRepository.GetAsync(e => e.Id == eventId) ?? throw new KeyNotFoundException("Event Doesn't Exist");
 
             eventToUpdate.Name = e.Name;
             eventToUpdate.Description = e.Description;
             eventToUpdate.Location = e.Location;
             eventToUpdate.DateTime = e.DateTime;
+            if(string.IsNullOrEmpty(e.ImageUrl)) eventToUpdate.ImageUrl = e.ImageUrl;
 
             await _eventRepository.UpdateAsync(eventToUpdate);
 
@@ -203,9 +280,19 @@ namespace Event_Management.Business.Services
                 DateTime = updatedEvent.DateTime,
                 CreatedAt = updatedEvent.CreatedAt,
                 OrganizerId = updatedEvent.OrganizerId,
-                Organizer = updatedEvent.Organizer
             };
+            if (updatedEvent.Organizer != null)
+            {
+
+                response.Organizer = new AttendeeResponseDto
+                {
+                    Id = updatedEvent.OrganizerId,
+                    Name = updatedEvent.Organizer.FullName,
+                    Email = updatedEvent.Organizer.Email != null ? updatedEvent.Organizer.Email : "",
+                };
+            }
             return response;
         }
+
     }
 }

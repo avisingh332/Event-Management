@@ -13,7 +13,6 @@ namespace Event_Management.Data.Models
         public Guid EventId { get; set; }
         [ForeignKey("Attendee")]
         public string AttendeeId { get; set; }
-
         // navigation Property 
 
         public virtual Event  Event { get; set; }

@@ -1,0 +1,67 @@
+<table class="table table-striped mt-4">
+  <thead>
+    <tr>
+      <th scope="col">Name</th>
+      <th scope="col">Date and Time</th>
+      <th scope="col">Description</th>
+      <th scope="col">Location</th>
+      <th scope="col">Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    <ng-container *ngFor="let event of eventsVm">
+      <!-- Event Row -->
+      <tr>
+        <td><a [routerLink]="['/event-details', event.id ]">{{ event.name }}</a></td>
+        <td>{{ event.dateTime | date }} | {{ event.dateTime | timeFormat }}</td>
+        <td>{{ event.description }}</td>
+        <td>{{ event.location }}</td>
+        <td>
+          <!-- Attendee Actions -->
+          <ng-container *ngIf="role === 'Attendee'">
+            <ng-container *ngIf="isEventRegistered(event); else notRegistered">
+              Registered
+            </ng-container>
+            <ng-template #notRegistered>
+              <button (click)="registerEvent(event)">Register</button>
+            </ng-template>
+          </ng-container>
+
+          <!-- Organizer Actions -->
+          <ng-container *ngIf="role === 'Organizer'">
+            <button [routerLink]="['/organizer','update-event', event.id]">Edit</button>
+            <button (click)="deleteEvent(event)">Delete</button>
+            <button (click)="guestListToggle(event.id)">
+              <i class="fa-solid" [ngClass]="{'fa-angle-down': !event.toggleGuestList, 'fa-angle-up': event.toggleGuestList}" style="transition: transform 0.3s;"></i>
+            </button> 
+          </ng-container>
+        </td>
+      </tr>
+
+      <!-- Guest List Row -->
+      <tr *ngIf="event.toggleGuestList"  >
+        <ng-container *ngIf="event.attendees && event.attendees.length>0;else noAttendee" >
+          <td colspan="5">
+            <table class="table table-striped mt-2">
+              <thead>
+                <tr>
+                  <th scope="col">Name</th>
+                  <th scope="col">Email</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let guest of event.attendees">
+                  <td>{{ guest.name }}</td>
+                  <td>{{ guest.email }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </td>
+        </ng-container>
+        <ng-template #noAttendee>
+          <td colspan="5" class="text-center">No Attendees</td>
+        </ng-template>
+      </tr>
+    </ng-container>
+  </tbody>
+</table>
